@@ -5,9 +5,10 @@ import {
   type CanonicalColumn,
 } from '../config/columnAliases'
 import { MAX_PREVIEW_ROWS, SOURCE_FILE_LABEL } from '../config/fileFormat'
-import type { DiscountEntry, SourceFile } from '../domain/types'
+import type { DiscountEntry, SourceFile, StoreAssignment } from '../domain/types'
 import { err, ok, type Result } from '../domain/result'
 import { deriveCityFromSheetName } from './deriveCityFromSheetName'
+import { extractStoreAssignments } from './extractStoreAssignments'
 import { matchColumn } from './matchColumn'
 import { parseNumericCell, parseTextCell } from './parseNumericCell'
 import type { RawSheet } from './rawSheet'
@@ -31,6 +32,8 @@ export interface ParsedFile {
   cityStrategy: CityStrategy
   previewRows: Record<string, unknown>[]
   previewHeaders: string[]
+  /** Tabela auxiliar de lojas (Código + Nome da filial), quando presente nas abas do arquivo. */
+  storeAssignments: StoreAssignment[]
 }
 
 export interface FileStructureError {
@@ -130,6 +133,7 @@ export function parseDiscountFile(
     cityStrategy,
     previewRows: referenceSheet.rows.slice(0, MAX_PREVIEW_ROWS),
     previewHeaders: referenceHeaders,
+    storeAssignments: extractStoreAssignments(nonEmptySheets),
   })
 }
 

@@ -17,7 +17,7 @@ function corruptedXlsxFile(): File {
 
 describe('loadDiscountFile', () => {
   it('retorna um erro tratado (não lança exceção) quando o arquivo está corrompido', async () => {
-    const result = await loadDiscountFile(corruptedXlsxFile(), 'fidelidade')
+    const result = await loadDiscountFile([corruptedXlsxFile()], 'fidelidade')
 
     expect(result.ok).toBe(false)
     if (result.ok) return

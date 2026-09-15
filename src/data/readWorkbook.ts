@@ -21,8 +21,9 @@ export async function readWorkbook(file: File): Promise<RawSheet[]> {
       defval: null,
       raw: true,
     })
+    const arrayRows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: null, raw: true })
     const headers = rows.length > 0 ? Object.keys(rows[0]) : readHeaderRow(XLSX, sheet)
-    return { sheetName, headers, rows }
+    return { sheetName, headers, rows, arrayRows }
   })
 }
 

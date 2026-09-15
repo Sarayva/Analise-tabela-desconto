@@ -14,6 +14,7 @@ function parsedFile(entries: DiscountEntry[], skippedRowCount = 0): ParsedFile {
     cityStrategy: { mode: 'por_aba' },
     previewRows: [],
     previewHeaders: [],
+    storeAssignments: [],
   }
 }
 

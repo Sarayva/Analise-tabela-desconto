@@ -3,7 +3,9 @@ import type { RawSheet } from '../rawSheet'
 import { parseDiscountFile } from '../parseDiscountFile'
 
 function sheet(sheetName: string, rows: Record<string, unknown>[]): RawSheet {
-  return { sheetName, headers: rows.length > 0 ? Object.keys(rows[0]) : [], rows }
+  const headers = rows.length > 0 ? Object.keys(rows[0]) : []
+  const arrayRows = rows.map((row) => headers.map((header) => row[header]))
+  return { sheetName, headers, rows, arrayRows }
 }
 
 describe('parseDiscountFile', () => {

@@ -1,3 +1,4 @@
+import { normalizeCityName } from '../domain/normalizeCityName'
 import { levenshteinDistance } from './levenshteinDistance'
 
 export interface CityNameVariant {
@@ -7,15 +8,6 @@ export interface CityNameVariant {
 
 /** Diferenças pequenas o suficiente (ex.: acento, espaço, 1-2 letras) para provavelmente ser a mesma cidade. */
 const MAX_VARIANT_DISTANCE = 2
-
-function normalizeCityName(city: string): string {
-  return city
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .trim()
-}
 
 /**
  * Compara os nomes de cidade de dois arquivos e aponta pares que só existem

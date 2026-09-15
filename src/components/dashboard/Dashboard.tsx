@@ -7,6 +7,7 @@ import { summarizeGapDistribution } from '../../domain/summarizeGapDistribution'
 import { summarizeOverall } from '../../domain/summarizeOverall'
 import type { DiscountRecord } from '../../domain/types'
 import { useFilterStore } from '../../state/useFilterStore'
+import { APP_SECTIONS, type AppSection } from '../../state/useNavigationStore'
 import { CategoryAnalysisTable } from './CategoryAnalysisTable'
 import { CityCategoryMatrixSection } from './CityCategoryMatrixSection'
 import { CityRankingTable } from './CityRankingTable'
@@ -22,12 +23,20 @@ import { NoFilteredResults } from './NoFilteredResults'
 // carregamento inicial da página.
 const CityGapChart = lazy(() => import('./CityGapChart'))
 
+const RECORD_BASED_SECTIONS: AppSection[] = [
+  'visao-geral',
+  'ranking-cidades',
+  'analise-categoria',
+  'tabela-detalhada',
+]
+
 interface DashboardProps {
   records: DiscountRecord[]
+  activeSection: AppSection
 }
 
-/** Dashboard executivo: filtros, visão geral, ranking de cidades, análise por categoria e matriz. */
-export function Dashboard({ records }: DashboardProps) {
+/** Dashboard executivo: filtros, visão geral, ranking de cidades, análise por categoria e matriz — mostra uma seção por vez, escolhida pelo menu lateral. */
+export function Dashboard({ records, activeSection }: DashboardProps) {
   const city = useFilterStore((state) => state.city)
   const categoryCode = useFilterStore((state) => state.categoryCode)
   const situation = useFilterStore((state) => state.situation)
@@ -57,10 +66,13 @@ export function Dashboard({ records }: DashboardProps) {
   const totalCategories = new Set(recordsForAnalysis.map((record) => record.categoryCode)).size
   const unmatchedCount = recordsForAnalysis.filter((record) => record.situation === 'sem_par').length
 
+  const sectionTitle = APP_SECTIONS.find((section) => section.id === activeSection)?.label ?? 'Dashboard'
+  const isRecordBasedSection = RECORD_BASED_SECTIONS.includes(activeSection)
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">Dashboard</h2>
+        <h2 className="text-lg font-semibold text-slate-900">{sectionTitle}</h2>
         {recordsForAnalysis.length > 0 && (
           <ExportButton records={recordsForAnalysis} cities={citySummaries} categories={categorySummaries} />
         )}
@@ -68,38 +80,41 @@ export function Dashboard({ records }: DashboardProps) {
 
       <FilterBar fullMatrix={fullMatrix} visibleCount={recordsForAnalysis.length} totalCount={records.length} />
 
-      {recordsForAnalysis.length === 0 ? (
-        <NoFilteredResults />
-      ) : (
-        <>
-          <KpiCards
-            totalCities={totalCities}
-            totalCategories={totalCategories}
-            totalRecords={recordsForAnalysis.length}
-            averageFidelity={overall.averageFidelity}
-            averageLimit={overall.averageLimit}
-            averageGap={gapSummary.averageGap}
-            inconsistencyCount={gapSummary.bySituation.inconsistencia.count}
-            unmatchedCount={unmatchedCount}
-          />
+      {isRecordBasedSection &&
+        (recordsForAnalysis.length === 0 ? (
+          <NoFilteredResults />
+        ) : (
+          <>
+            {activeSection === 'visao-geral' && (
+              <>
+                <KpiCards
+                  totalCities={totalCities}
+                  totalCategories={totalCategories}
+                  totalRecords={recordsForAnalysis.length}
+                  averageFidelity={overall.averageFidelity}
+                  averageLimit={overall.averageLimit}
+                  averageGap={gapSummary.averageGap}
+                  inconsistencyCount={gapSummary.bySituation.inconsistencia.count}
+                  unmatchedCount={unmatchedCount}
+                />
+                <GapSummaryPreview summary={gapSummary} />
+                <Suspense fallback={<ChartLoadingPlaceholder />}>
+                  <CityGapChart cities={citySummaries} />
+                </Suspense>
+              </>
+            )}
 
-          <GapSummaryPreview summary={gapSummary} />
+            {activeSection === 'ranking-cidades' && <CityRankingTable cities={citySummaries} />}
 
-          <Suspense fallback={<ChartLoadingPlaceholder />}>
-            <CityGapChart cities={citySummaries} />
-          </Suspense>
+            {activeSection === 'analise-categoria' && <CategoryAnalysisTable categories={categorySummaries} />}
 
-          <CityRankingTable cities={citySummaries} />
+            {activeSection === 'tabela-detalhada' && <DetailedRecordsTable records={recordsForAnalysis} />}
+          </>
+        ))}
 
-          <CategoryAnalysisTable categories={categorySummaries} />
+      {activeSection === 'matriz' && <CityCategoryMatrixSection matrix={matrix} />}
 
-          <DetailedRecordsTable records={recordsForAnalysis} />
-        </>
-      )}
-
-      <CityCategoryMatrixSection matrix={matrix} />
-
-      <MissingCategoriesSummary matrix={matrix} />
+      {activeSection === 'categorias-ausentes' && <MissingCategoriesSummary matrix={matrix} />}
     </div>
   )
 }
