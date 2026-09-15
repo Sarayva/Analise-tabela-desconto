@@ -7,7 +7,8 @@ export type UploadSlotStatus = 'vazio' | 'lendo' | 'pronto' | 'erro'
 
 export interface UploadSlot {
   status: UploadSlotStatus
-  fileName: string | null
+  /** Nomes de todos os arquivos carregados nesse campo (pode ser mais de um, ex.: lojas de fora + Maringá). */
+  fileNames: string[]
   result: ParsedFile | null
   error: FileLoadError | null
 }
@@ -15,10 +16,10 @@ export interface UploadSlot {
 interface UploadStoreState {
   fidelidade: UploadSlot
   limite: UploadSlot
-  loadFile: (source: SourceFile, file: File) => Promise<void>
+  loadFile: (source: SourceFile, files: File[]) => Promise<void>
 }
 
-const EMPTY_SLOT: UploadSlot = { status: 'vazio', fileName: null, result: null, error: null }
+const EMPTY_SLOT: UploadSlot = { status: 'vazio', fileNames: [], result: null, error: null }
 
 export const useUploadStore = create<UploadStoreState>((set) => {
   const setSlot = (source: SourceFile, slot: UploadSlot) =>
@@ -27,16 +28,17 @@ export const useUploadStore = create<UploadStoreState>((set) => {
   return {
     fidelidade: EMPTY_SLOT,
     limite: EMPTY_SLOT,
-    loadFile: async (source, file) => {
-      setSlot(source, { status: 'lendo', fileName: file.name, result: null, error: null })
+    loadFile: async (source, files) => {
+      const fileNames = files.map((file) => file.name)
+      setSlot(source, { status: 'lendo', fileNames, result: null, error: null })
 
-      const result = await loadDiscountFile(file, source)
+      const result = await loadDiscountFile(files, source)
 
       setSlot(
         source,
         result.ok
-          ? { status: 'pronto', fileName: file.name, result: result.value, error: null }
-          : { status: 'erro', fileName: file.name, result: null, error: result.error },
+          ? { status: 'pronto', fileNames, result: result.value, error: null }
+          : { status: 'erro', fileNames, result: null, error: result.error },
       )
     },
   }

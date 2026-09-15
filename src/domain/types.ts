@@ -56,3 +56,33 @@ export interface MatchedDiscountRecord extends DiscountRecord {
 export function isMatchedRecord(record: DiscountRecord): record is MatchedDiscountRecord {
   return record.gap !== null
 }
+
+/** Uma loja atribuída a uma cidade/tabela de desconto, extraída da tabela auxiliar dentro da mesma aba do arquivo de desconto. */
+export interface StoreAssignment {
+  storeCode: number
+  storeName: string
+  tabela: string
+}
+
+/** Uma loja da lista oficial (código, nome, cidade de origem) — fonte de verdade independente dos arquivos de desconto. */
+export interface StoreDirectoryEntry {
+  code: number
+  label: string
+  city: string
+}
+
+/**
+ * Uma venda que precisou de desconto excepcional (cupom/ajuste manual de
+ * preço), já normalizada — vem do relatório de cupons, não dos arquivos de
+ * desconto Fidelidade/Limite.
+ */
+export interface CupomEntry {
+  city: string
+  storeCode: number
+  categoryDescription: string
+  cupomNumber: string
+  saleDate: string
+  saleValue: number
+  discountValue: number
+  discountPercentage: number
+}

@@ -1,19 +1,28 @@
+import { Sidebar } from './components/layout/Sidebar'
+import { Dashboard } from './components/dashboard/Dashboard'
+import { NoDataPrompt } from './components/layout/NoDataPrompt'
 import { UploadScreen } from './components/upload/UploadScreen'
+import { useAnalysisData } from './state/useAnalysisData'
+import { useNavigationStore } from './state/useNavigationStore'
 
 function App() {
-  return (
-    <div className="min-h-svh bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-5xl px-6 py-5">
-          <h1 className="text-xl font-semibold">Analisador de Descontos</h1>
-          <p className="text-sm text-slate-500">
-            Compare o desconto Fidelidade e o desconto Limite entre cidades e categorias.
-          </p>
-        </div>
-      </header>
+  const activeSection = useNavigationStore((state) => state.activeSection)
+  const { records } = useAnalysisData()
 
-      <main className="mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 py-12">
-        <UploadScreen />
+  return (
+    <div className="flex h-screen bg-slate-50 text-slate-900">
+      <Sidebar />
+
+      <main className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-6xl px-6 py-8">
+          {activeSection === 'upload' ? (
+            <UploadScreen />
+          ) : records ? (
+            <Dashboard records={records} activeSection={activeSection} />
+          ) : (
+            <NoDataPrompt />
+          )}
+        </div>
       </main>
     </div>
   )

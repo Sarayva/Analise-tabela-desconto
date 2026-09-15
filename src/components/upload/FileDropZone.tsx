@@ -6,8 +6,12 @@ interface FileDropZoneProps {
   label: string
   description: string
   status: UploadSlotStatus
-  fileName: string | null
-  onFileSelected: (file: File) => void
+  fileNames: string[]
+  onFilesSelected: (files: File[]) => void
+  /** Permite selecionar mais de um arquivo de uma vez (ex.: lojas de fora + Maringá). */
+  multiple?: boolean
+  /** Extensões aceitas — por padrão, os formatos de planilha (.xlsx/.xls/.csv). */
+  acceptedExtensions?: readonly string[]
 }
 
 const STATUS_TEXT: Record<UploadSlotStatus, string> = {
@@ -17,14 +21,22 @@ const STATUS_TEXT: Record<UploadSlotStatus, string> = {
   erro: 'Não foi possível processar o arquivo',
 }
 
-export function FileDropZone({ label, description, status, fileName, onFileSelected }: FileDropZoneProps) {
+export function FileDropZone({
+  label,
+  description,
+  status,
+  fileNames,
+  onFilesSelected,
+  multiple = false,
+  acceptedExtensions = ACCEPTED_EXTENSIONS,
+}: FileDropZoneProps) {
   const inputId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDraggingOver, setIsDraggingOver] = useState(false)
 
   function handleFiles(files: FileList | null) {
-    const file = files?.[0]
-    if (file) onFileSelected(file)
+    if (!files || files.length === 0) return
+    onFilesSelected(Array.from(files))
   }
 
   return (
@@ -57,10 +69,11 @@ export function FileDropZone({ label, description, status, fileName, onFileSelec
         }`}
       >
         <span className="text-sm font-medium text-slate-700">
-          Arraste o arquivo aqui ou clique para selecionar
+          Arraste o(s) arquivo(s) aqui ou clique para selecionar
         </span>
         <span className="text-xs text-slate-500">
-          Formatos aceitos: {ACCEPTED_EXTENSIONS.join(', ')}
+          Formatos aceitos: {acceptedExtensions.join(', ')}
+          {multiple ? ' · pode selecionar mais de um arquivo' : ''}
         </span>
       </button>
 
@@ -68,7 +81,8 @@ export function FileDropZone({ label, description, status, fileName, onFileSelec
         ref={inputRef}
         id={inputId}
         type="file"
-        accept={ACCEPTED_EXTENSIONS.join(',')}
+        multiple={multiple}
+        accept={acceptedExtensions.join(',')}
         className="sr-only"
         onChange={(event) => handleFiles(event.target.files)}
       />
@@ -81,7 +95,7 @@ export function FileDropZone({ label, description, status, fileName, onFileSelec
         }`}
       >
         {STATUS_TEXT[status]}
-        {fileName ? ` — ${fileName}` : ''}
+        {fileNames.length > 0 ? ` — ${fileNames.join(', ')}` : ''}
       </p>
     </div>
   )
